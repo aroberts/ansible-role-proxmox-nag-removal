@@ -1,0 +1,22 @@
+---
+
+# pveceph install writes a single-stanza ceph.sources (PVE 9) or ceph.list
+# (PVE 8 and older), pointing at enterprise.proxmox.com only when the
+# enterprise repo was selected. Match on that host so a no-subscription or
+# test Ceph repo is left alone.
+- name: Find Ceph enterprise repo files
+  find:
+    paths: /etc/apt/sources.list.d
+    patterns:
+      - ceph.list
+      - ceph.sources
+    contains: '.*enterprise\.proxmox\.com'
+  register: ceph_enterprise_repo_files
+
+- name: Ensure Ceph enterprise repo file is not present
+  file:
+    path: "{{ item.path }}"
+    state: absent
+  loop: "{{ ceph_enterprise_repo_files.files }}"
+  loop_control:
+    label: "{{ item.path }}"

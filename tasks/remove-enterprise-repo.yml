@@ -1,6 +1,12 @@
 ---
 
+# PVE 9 (Debian 13 / trixie) ships the enterprise repo as a deb822
+# pve-enterprise.sources file. PVE 8 and older use a one-line
+# pve-enterprise.list. Remove whichever one this host has.
 - name: Ensure enterprise repo file is not present
   file:
-    path: /etc/apt/sources.list.d/pve-enterprise.list
+    path: "{{ item }}"
     state: absent
+  loop:
+    - /etc/apt/sources.list.d/pve-enterprise.list
+    - /etc/apt/sources.list.d/pve-enterprise.sources

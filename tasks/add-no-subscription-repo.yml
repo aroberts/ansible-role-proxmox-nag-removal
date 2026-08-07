@@ -1,6 +1,32 @@
 ---
-- name: Add No Subscription Repository
+
+- name: Add No Subscription Repository (deb822)
+  when: ansible_distribution_major_version | int >= 13
+  block:
+    # PVE 9 runs on Debian 13 (trixie), where Proxmox switched its APT sources to
+    # the deb822 format and started shipping the archive key in
+    # /usr/share/keyrings instead of /etc/apt/trusted.gpg.d.
+    - name: Add No Subscription Repository
+      copy:
+        dest: /etc/apt/sources.list.d/pve-no-subscription.sources
+        content: |
+          Types: deb
+          URIs: http://download.proxmox.com/debian/pve
+          Suites: {{ ansible_distribution_release }}
+          Components: pve-no-subscription
+          Signed-By: /usr/share/keyrings/proxmox-archive-keyring.gpg
+        owner: root
+        group: root
+        mode: "0644"
+
+    - name: Ensure one-line No Subscription Repository is not also present
+      file:
+        path: /etc/apt/sources.list.d/pve-no-subscription.list
+        state: absent
+
+- name: Add No Subscription Repository (one-line)
   apt_repository:
     repo: deb http://download.proxmox.com/debian/pve {{ ansible_distribution_release }} pve-no-subscription
     filename: pve-no-subscription
     state: present
+  when: ansible_distribution_major_version | int < 13
